@@ -66,17 +66,17 @@ If `all_formats` is set to `0`, the following additional arguments must be speci
 
 Example with specific data formats:
 ```shell
-$ ./bin/benchmark conv_example.txt out_example.txt fp32 0 100 NHWC NHWC NHWC
+$ ./bin/benchmark conv_example.txt out_example.csv fp32 0 100 NHWC NHWC NHWC
 ```
 Example with all data formats:
 ```shell
-$ ./bin/benchmark conv_example.txt out_example.txt fp32 1 1000
+$ ./bin/benchmark conv_example.txt out_example.csv fp32 1 1000
 ```
 Obtaining results
 -----------------
 Running the benchmark produces a `output_file_name` file in your working directory.
 
-[Example](https://github.com/Slimakanzer/cudnn-benchmark/blob/master/out_example.txt) contents for `./bin/benchmark conv_example.txt out_example.txt fp32 0 1 10 NCHW NCHW NCHW`:
+[Example](https://github.com/Slimakanzer/cudnn-benchmark/blob/master/out_example.csv) contents for `./bin/benchmark conv_example.txt out_example.txt fp32 0 1 10 NCHW NCHW NCHW`:
 
 A value `n/a` means that the combination of the input tensor dimension, filter tensor dimension and output tensor dimension is not supported for the specified algorithm on your GPU.
 
