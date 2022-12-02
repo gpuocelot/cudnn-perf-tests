@@ -163,25 +163,25 @@ void Benchmark<T, O>::benchmark(benchmarkRow &benchmarkInput, uint32_t num_repea
         throw new std::runtime_error("Cannot find supported format");
     }
 
-    cudnnDataType_t outDataType;
+    cudnnDataType_t computeDataType;
     if (std::is_same<O, DATA_FLOAT>::value) {
-        outDataType = CUDNN_DATA_FLOAT;
+        computeDataType = CUDNN_DATA_FLOAT;
     } else if (std::is_same<O, DATA_DOUBLE>::value) {
-        outDataType = CUDNN_DATA_DOUBLE;
+        computeDataType = CUDNN_DATA_DOUBLE;
     } else if (std::is_same<O, DATA_HALF_FLOAT>::value) {
-        outDataType = CUDNN_DATA_HALF;
+        computeDataType = CUDNN_DATA_HALF;
     } else if (std::is_same<O, DATA_INT32>::value) {
-        outDataType = CUDNN_DATA_INT32;
+        computeDataType = CUDNN_DATA_INT32;
     } else if (std::is_same<O, DATA_INT8>::value) {
-        outDataType = CUDNN_DATA_INT8;
+        computeDataType = CUDNN_DATA_INT8;
     } else if (std::is_same<O, DATA_UINT8>::value) {
-        outDataType = CUDNN_DATA_UINT8;
+        computeDataType = CUDNN_DATA_UINT8;
     } else if (std::is_same<O, DATA_INT8x4>::value) {
-        outDataType = CUDNN_DATA_INT8x4;
+        computeDataType = CUDNN_DATA_INT8x4;
     } else if (std::is_same<O, DATA_INT8x32>::value) {
-        outDataType = CUDNN_DATA_INT8x32;
+        computeDataType = CUDNN_DATA_INT8x32;
     } else if (std::is_same<O, DATA_UINT8x4>::value) {
-        outDataType = CUDNN_DATA_UINT8x4;
+        computeDataType = CUDNN_DATA_UINT8x4;
     } else {
         throw new std::runtime_error("Cannot find supported format");
     }
@@ -211,7 +211,7 @@ void Benchmark<T, O>::benchmark(benchmarkRow &benchmarkInput, uint32_t num_repea
     };
 
     inputTensorDescriptor = new TensorDescriptor(formatInputTensor, dataType);
-    outputTensorDescriptor = new TensorDescriptor(formatOutputTensor, outDataType);
+    outputTensorDescriptor = new TensorDescriptor(formatOutputTensor, dataType);
     filterDescriptor = new FilterDescriptor(formatFilter, dataType);
 
 
@@ -225,7 +225,7 @@ void Benchmark<T, O>::benchmark(benchmarkRow &benchmarkInput, uint32_t num_repea
                                                       1,
                                                       1,
                                                       CUDNN_CROSS_CORRELATION,
-                                                      outDataType));
+                                                      computeDataType));
     int n, c, h, w;
 
     CHECK_CUDNN_ERROR(cudnnGetConvolution2dForwardOutputDim(
