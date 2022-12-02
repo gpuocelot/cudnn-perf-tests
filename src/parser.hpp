@@ -115,9 +115,9 @@ namespace parser {
         return benchmark_rows;
     }
 
-    template<typename T>
+    template<typename T, typename O=T>
     class Parser {
-        Benchmark<T> *benchmark_;
+        Benchmark<T, O> *benchmark_;
         std::ofstream outfile_stream_;
         std::string out_file_name_;
 
@@ -312,7 +312,7 @@ namespace parser {
         }
 
     public:
-        Parser(Benchmark<T> *benchmark, std::string out_file_name = "benchmark_result.txt") {
+        Parser(Benchmark<T, O> *benchmark, std::string out_file_name = "benchmark_result.txt") {
             this->benchmark_ = benchmark;
             this->out_file_name_ = out_file_name;
             openOutFile();

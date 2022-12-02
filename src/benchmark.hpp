@@ -57,11 +57,11 @@ struct benchmarkRow {
             CUDNN_CONVOLUTION_BWD_DATA_ALGO_WINOGRAD_NONFUSED;
 };
 
-template<typename T>
+template<typename T, typename O=T>
 class Benchmark {
     cudnnHandle_t cudnn;
     Tensor<T> *inputTensor;
-    Tensor<T> *outputTensor;
+    Tensor<O> *outputTensor;
     Tensor<T> *kernelTensor;
     Tensor<T> *delta;
     Tensor<T> *dW;
