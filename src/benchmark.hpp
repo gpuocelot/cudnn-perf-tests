@@ -23,7 +23,7 @@ struct benchmarkResult {
 };
 
 struct benchmarkRow {
-    int w, h, c, n, k, s, r, pad_w, pad_h, stride_w, stride_h, out_w, out_h, input_stride_w = 1, input_stride_h = 1, filter_stride_w = 1, filter_stride_h = 1;
+    int w, h, c, n, k, s, r, pad_w, pad_h, stride_w, stride_h, out_w, out_h;
     cudnnTensorFormat_t
             inputTensorFormat,
             outputTensorFormat,

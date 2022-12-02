@@ -89,26 +89,6 @@ namespace parser {
                 benchmark_row.out_h = std::stoi(substr.c_str());
                 line = line.substr(index_end + 1, line.length());
 
-                index_end = line.find('\t');
-                substr = line.substr(0, index_end);
-                benchmark_row.input_stride_w = std::stoi(substr.c_str());
-                line = line.substr(index_end + 1, line.length());
-
-                index_end = line.find('\t');
-                substr = line.substr(0, index_end);
-                benchmark_row.input_stride_h = std::stoi(substr.c_str());
-                line = line.substr(index_end + 1, line.length());
-
-                index_end = line.find('\t');
-                substr = line.substr(0, index_end);
-                benchmark_row.filter_stride_w = std::stoi(substr.c_str());
-                line = line.substr(index_end + 1, line.length());
-
-                index_end = line.find('\t');
-                substr = line.substr(0, index_end);
-                benchmark_row.filter_stride_h = std::stoi(substr.c_str());
-                line = line.substr(index_end + 1, line.length());
-
                 benchmark_rows.push_back(benchmark_row);
             }
         }
@@ -139,11 +119,7 @@ namespace parser {
                        "\tstride_w"
                        "\tstride_h"
                        "\tout_w"
-                       "\tout_h"
-                       "\tinput_stride_w"
-                       "\tinput_stride_h"
-                       "\tfilter_stride_w"
-                       "\tfilter_stride_h";
+                       "\tout_h";
 
             outfile_stream_ << "\tFWD_GEMM"
                         "\tFWD_GEMM WORKSPACE"
@@ -184,9 +160,7 @@ namespace parser {
                     << "\t" << get_data_format_name(row->filterFormat) << "\t" << row->w << "\t" << row->h << "\t" << row->c
                     << "\t" << row->n << "\t" << row->k << "\t" << row->s << "\t" << row->r << "\t" << row->pad_w
                     << "\t" << row->pad_h << "\t" << row->stride_w << "\t" << row->stride_h
-                    << "\t" << row->out_w << "\t" << row->out_h << "\t" << row->input_stride_w << "\t"
-                    << row->input_stride_h
-                    << "\t" << row->filter_stride_w << "\t" << row->filter_stride_h << "\t";
+                    << "\t" << row->out_w << "\t" << row->out_h << "\t";
 
             writeBenchmarkResultCalculateMode(row->CUDNN_CONVOLUTION_FWD_ALGO_GEMM);
             writeBenchmarkResultCalculateMode(row->CUDNN_CONVOLUTION_FWD_ALGO_IMPLICIT_GEMM);
