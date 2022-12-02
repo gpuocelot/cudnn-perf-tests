@@ -58,9 +58,6 @@ class Benchmark {
     Tensor<T> *inputTensor;
     Tensor<O> *outputTensor;
     Tensor<T> *kernelTensor;
-    Tensor<T> *delta;
-    Tensor<T> *dW;
-    Tensor<T> *dX;
     const float alpha = 1, beta = 0;
 
     TensorDescriptor *inputTensorDescriptor;
@@ -71,21 +68,9 @@ class Benchmark {
 
     size_t fwd_workspace_size(cudnnConvolutionFwdAlgo_t algo);
 
-    size_t bwd_filter_workspace_size(cudnnConvolutionBwdFilterAlgo_t algo);
-
-    size_t bwd_data_workspace_size(cudnnConvolutionBwdDataAlgo_t algo);
-
     benchmarkResult forward(cudnnConvolutionFwdAlgo_t algo, uint32_t num_repeats);
 
-    benchmarkResult backward_filter(cudnnConvolutionBwdFilterAlgo_t algo, uint32_t num_repeats);
-
-    benchmarkResult backward_data(cudnnConvolutionBwdDataAlgo_t algo, uint32_t num_repeats);
-
     void forward_algorythms(uint32_t num_repeats);
-
-    void backward_filter_algorythms(uint32_t num_repeats);
-
-    void backward_data_algorythms(uint32_t num_repeats);
 
     void calculate_workspace_benchmark(uint32_t num_repeats);
 

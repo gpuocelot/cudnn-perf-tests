@@ -44,44 +44,6 @@ size_t Benchmark<T, O>::fwd_workspace_size(cudnnConvolutionFwdAlgo_t algo) {
 }
 
 template<typename T, typename O>
-size_t Benchmark<T, O>::bwd_filter_workspace_size(cudnnConvolutionBwdFilterAlgo_t algo) {
-    assert(cudnn);
-    assert(inputTensorDescriptor);
-    assert(filterDescriptor);
-    assert(outputTensorDescriptor);
-
-    size_t workspace_size = 0;
-    CHECK_CUDNN_ERROR(cudnnGetConvolutionBackwardFilterWorkspaceSize(cudnn,
-                                                                     inputTensorDescriptor->descriptor(),
-                                                                     outputTensorDescriptor->descriptor(),
-                                                                     convolutionDescriptor_,
-                                                                     filterDescriptor->descriptor(),
-                                                                     algo,
-                                                                     &workspace_size));
-    return workspace_size;
-}
-
-template<typename T, typename O>
-size_t Benchmark<T, O>::bwd_data_workspace_size(cudnnConvolutionBwdDataAlgo_t algo) {
-    assert(cudnn);
-    assert(inputTensorDescriptor);
-    assert(filterDescriptor);
-    assert(outputTensorDescriptor);
-
-    size_t workspace_size = 0;
-    CHECK_CUDNN_ERROR(cudnnGetConvolutionBackwardDataWorkspaceSize(cudnn,
-                                                                   filterDescriptor->descriptor(),
-                                                                   outputTensorDescriptor->descriptor(),
-                                                                   convolutionDescriptor_,
-                                                                   inputTensorDescriptor->descriptor(),
-                                                                   algo,
-                                                                   &workspace_size));
-    return workspace_size;
-
-
-}
-
-template<typename T, typename O>
 benchmarkResult Benchmark<T, O>::forward(cudnnConvolutionFwdAlgo_t algo, uint32_t num_repeats) {
     assert(inputTensor);
     assert(outputTensor);
@@ -134,107 +96,6 @@ benchmarkResult Benchmark<T, O>::forward(cudnnConvolutionFwdAlgo_t algo, uint32_
 }
 
 template<typename T, typename O>
-benchmarkResult Benchmark<T, O>::backward_filter(cudnnConvolutionBwdFilterAlgo_t algo, uint32_t num_repeats) {
-    assert(inputTensor);
-    assert(dW);
-    assert(delta);
-
-    size_t workspace_size;
-    try {
-        workspace_size = bwd_filter_workspace_size(algo);
-    } catch (std::exception &exception) {
-        std::cerr << "WORKSPACE SIZE: " << get_bwd_filter_algo_name(algo) << " " << exception.what();
-        return {0, 0, BENCHMARK_NOT_SUPPORTED};
-    }
-
-    void *d_workspace{nullptr};
-    cudaMalloc(&d_workspace, workspace_size);
-
-    double fwd_time = 0;
-    cudaDeviceSynchronize();
-    auto start = std::chrono::steady_clock::now();
-
-    for (int i = 0; i < num_repeats; ++i) {
-        cudnnStatus_t bwd_filter_status = cudnnConvolutionBackwardFilter(cudnn,
-                                                                         &alpha,
-                                                                         inputTensorDescriptor->descriptor(),
-                                                                         inputTensor->begin(),
-                                                                         outputTensorDescriptor->descriptor(),
-                                                                         delta->begin(),
-                                                                         convolutionDescriptor_,
-                                                                         algo,
-                                                                         d_workspace,
-                                                                         workspace_size,
-                                                                         &beta,
-                                                                         filterDescriptor->descriptor(),
-                                                                         dW->begin());
-
-        if (bwd_filter_status != CUDNN_STATUS_SUCCESS) {
-            std::cerr << "CONVOLUTION: CUDNN failure: " << cudnnGetErrorString(bwd_filter_status) << "algo: "
-                      << get_bwd_filter_algo_name(algo) << " file: " << __FILE__ << " line: " << __LINE__ << std::endl;
-            return {0, workspace_size, BENCHMARK_ERROR};
-        }
-
-    }
-    cudaDeviceSynchronize();
-    auto end = std::chrono::steady_clock::now();
-    fwd_time = std::chrono::duration<double, std::micro>(end - start).count() / num_repeats;
-    cudaFree(d_workspace);
-
-    return {fwd_time, workspace_size, BENCHMARK_SUCCESS};
-}
-
-template<typename T, typename O>
-benchmarkResult Benchmark<T, O>::backward_data(cudnnConvolutionBwdDataAlgo_t algo, uint32_t num_repeats) {
-    assert(kernelTensor);
-    assert(dX);
-    assert(delta);
-
-    size_t workspace_size;
-    try {
-        workspace_size = bwd_data_workspace_size(algo);
-    } catch (std::exception &exception) {
-        std::cerr << "WORKSPACE SIZE: " << get_bwd_data_algo_name(algo) << " " << exception.what();
-        return {0, 0, BENCHMARK_NOT_SUPPORTED};
-    }
-
-    void *d_workspace{nullptr};
-    cudaMalloc(&d_workspace, workspace_size);
-
-    double fwd_time = 0;
-    cudaDeviceSynchronize();
-    auto start = std::chrono::steady_clock::now();
-
-    for (int i = 0; i < num_repeats; ++i) {
-        cudnnStatus_t bwd_data_status = cudnnConvolutionBackwardData(cudnn,
-                                                                     &alpha,
-                                                                     filterDescriptor->descriptor(),
-                                                                     kernelTensor->begin(),
-                                                                     outputTensorDescriptor->descriptor(),
-                                                                     delta->begin(),
-                                                                     convolutionDescriptor_,
-                                                                     algo,
-                                                                     d_workspace,
-                                                                     workspace_size,
-                                                                     &beta,
-                                                                     inputTensorDescriptor->descriptor(),
-                                                                     dX->begin());
-
-        if (bwd_data_status != CUDNN_STATUS_SUCCESS) {
-            std::cerr << "CONVOLUTION: CUDNN failure: " << cudnnGetErrorString(bwd_data_status) << " algo: "
-                      << get_bwd_data_algo_name(algo) << " file: " << __FILE__ << " line: " << __LINE__ << std::endl;
-            return {0, workspace_size, BENCHMARK_ERROR};
-        }
-    }
-    cudaDeviceSynchronize();
-    auto end = std::chrono::steady_clock::now();
-    fwd_time = std::chrono::duration<double, std::micro>(end - start).count() / num_repeats;
-    cudaFree(d_workspace);
-
-    return {fwd_time, workspace_size, BENCHMARK_SUCCESS};
-}
-
-template<typename T, typename O>
 void Benchmark<T, O>::forward_algorythms(uint32_t num_repeats) {
     benchmark_row->CUDNN_CONVOLUTION_FWD_ALGO_GEMM = forward(CUDNN_CONVOLUTION_FWD_ALGO_GEMM, num_repeats);
     benchmark_row->CUDNN_CONVOLUTION_FWD_ALGO_IMPLICIT_GEMM = forward(CUDNN_CONVOLUTION_FWD_ALGO_IMPLICIT_GEMM,
@@ -247,34 +108,6 @@ void Benchmark<T, O>::forward_algorythms(uint32_t num_repeats) {
     benchmark_row->CUDNN_CONVOLUTION_FWD_ALGO_WINOGRAD = forward(CUDNN_CONVOLUTION_FWD_ALGO_WINOGRAD, num_repeats);
     benchmark_row->CUDNN_CONVOLUTION_FWD_ALGO_WINOGRAD_NONFUSED = forward(CUDNN_CONVOLUTION_FWD_ALGO_WINOGRAD_NONFUSED,
                                                                           num_repeats);
-}
-
-template<typename T, typename O>
-void Benchmark<T, O>::backward_filter_algorythms(uint32_t num_repeats) {
-    benchmark_row->CUDNN_CONVOLUTION_BWD_FILTER_ALGO_0 = backward_filter(CUDNN_CONVOLUTION_BWD_FILTER_ALGO_0,
-                                                                         num_repeats);
-    benchmark_row->CUDNN_CONVOLUTION_BWD_FILTER_ALGO_1 = backward_filter(CUDNN_CONVOLUTION_BWD_FILTER_ALGO_1,
-                                                                         num_repeats);
-    benchmark_row->CUDNN_CONVOLUTION_BWD_FILTER_ALGO_3 = backward_filter(CUDNN_CONVOLUTION_BWD_FILTER_ALGO_3,
-                                                                         num_repeats);
-    benchmark_row->CUDNN_CONVOLUTION_BWD_FILTER_ALGO_FFT = backward_filter(CUDNN_CONVOLUTION_BWD_FILTER_ALGO_FFT,
-                                                                           num_repeats);
-    benchmark_row->CUDNN_CONVOLUTION_BWD_FILTER_ALGO_FFT_TILING = backward_filter(
-            CUDNN_CONVOLUTION_BWD_FILTER_ALGO_FFT_TILING, num_repeats);
-}
-
-template<typename T, typename O>
-void Benchmark<T, O>::backward_data_algorythms(uint32_t num_repeats) {
-    benchmark_row->CUDNN_CONVOLUTION_BWD_DATA_ALGO_0 = backward_data(CUDNN_CONVOLUTION_BWD_DATA_ALGO_0, num_repeats);
-    benchmark_row->CUDNN_CONVOLUTION_BWD_DATA_ALGO_1 = backward_data(CUDNN_CONVOLUTION_BWD_DATA_ALGO_1, num_repeats);
-    benchmark_row->CUDNN_CONVOLUTION_BWD_DATA_ALGO_FFT = backward_data(CUDNN_CONVOLUTION_BWD_DATA_ALGO_FFT,
-                                                                       num_repeats);
-    benchmark_row->CUDNN_CONVOLUTION_BWD_DATA_ALGO_FFT_TILING = backward_data(
-            CUDNN_CONVOLUTION_BWD_DATA_ALGO_FFT_TILING, num_repeats);
-    benchmark_row->CUDNN_CONVOLUTION_BWD_DATA_ALGO_WINOGRAD = backward_data(CUDNN_CONVOLUTION_BWD_DATA_ALGO_WINOGRAD,
-                                                                            num_repeats);
-    benchmark_row->CUDNN_CONVOLUTION_BWD_DATA_ALGO_WINOGRAD_NONFUSED = backward_data(
-            CUDNN_CONVOLUTION_BWD_DATA_ALGO_WINOGRAD_NONFUSED, num_repeats);
 }
 
 template<typename T, typename O>
@@ -293,25 +126,14 @@ void Benchmark<T, O>::calculate_workspace_benchmark(uint32_t num_repeats) {
             {formatOutputTensor.N, formatOutputTensor.H, formatOutputTensor.W, formatOutputTensor.C});
     kernelTensor = new Tensor<T>({formatFilter.N, formatFilter.H, formatFilter.W, formatFilter.C});
 
-    delta = new Tensor<T>(
-            {formatOutputTensor.N, formatOutputTensor.H, formatOutputTensor.W, formatOutputTensor.C});
-    dW = new Tensor<T>({formatFilter.N, formatFilter.H, formatFilter.W, formatFilter.C});
-    dX = new Tensor<T>({formatInputTensor.N, formatInputTensor.H, formatInputTensor.W, formatInputTensor.C});
-
     inputTensor->rand(curand_gen);
     kernelTensor->rand(curand_gen);
-    delta->rand(curand_gen);
 
     forward_algorythms(num_repeats);
-    backward_filter_algorythms(num_repeats);
-    backward_data_algorythms(num_repeats);
 
     delete inputTensor;
     delete outputTensor;
     delete kernelTensor;
-    delete delta;
-    delete dW;
-    delete dX;
 }
 
 template<typename T, typename O>

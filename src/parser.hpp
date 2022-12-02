@@ -161,28 +161,6 @@ namespace parser {
                         "\tFWD_WINOGRAD WORKSPACE"
                         "\tFWD_WINOGRAD_NONFUSED"
                         "\tFWD_WINOGRAD_NONFUSED WORKSPACE"
-                        "\tBWD_FILTER_ALGO_0"
-                        "\tBWD_FILTER_ALGO_0 WORKPACE"
-                        "\tBWD_FILTER_ALGO_1"
-                        "\tBWD_FILTER_ALGO_1 WORKSPACE"
-                        "\tBWD_FILTER_ALGO_3"
-                        "\tBWD_FILTER_ALGO_3 WORKSPACE"
-                        "\tBWD_FILTER_FFT"
-                        "\tBWD_FILTER_FFT WORKSPACE"
-                        "\tBWD FILTER FFT_TILING"
-                        "\tBWD FILTER FFT_TILING WORKSPACE"
-                        "\tBWD_DATA_ALGO_0"
-                        "\tBWD_DATA_ALGO_0 WORKSPACE"
-                        "\tBWD_DATA_ALGO_1"
-                        "\tBWD_DATA_ALGO_1 WORKSPACE"
-                        "\tBWD_DATA_FFT"
-                        "\tBWD_DATA_FFT WORKSPACE"
-                        "\tBWD_DATA_FFT_TILING"
-                        "\tBWD_DATA_FFT_TILING WORKSPACE"
-                        "\tBWD_DATA_WINOGRAD"
-                        "\tBWD_DATA_WINOGRAD WORKSPACE"
-                        "\tBWD_DATA_WINOGRAD_NONFUSED"
-                        "\tBWD_DATA_WINOGRAD_NONFUSED WORKSPACE"
                         << std::endl;
         }
 
@@ -218,19 +196,6 @@ namespace parser {
             writeBenchmarkResultCalculateMode(row->CUDNN_CONVOLUTION_FWD_ALGO_FFT_TILING);
             writeBenchmarkResultCalculateMode(row->CUDNN_CONVOLUTION_FWD_ALGO_WINOGRAD);
             writeBenchmarkResultCalculateMode(row->CUDNN_CONVOLUTION_FWD_ALGO_WINOGRAD_NONFUSED);
-
-            writeBenchmarkResultCalculateMode(row->CUDNN_CONVOLUTION_BWD_FILTER_ALGO_0);
-            writeBenchmarkResultCalculateMode(row->CUDNN_CONVOLUTION_BWD_FILTER_ALGO_1);
-            writeBenchmarkResultCalculateMode(row->CUDNN_CONVOLUTION_BWD_FILTER_ALGO_3);
-            writeBenchmarkResultCalculateMode(row->CUDNN_CONVOLUTION_BWD_FILTER_ALGO_FFT);
-            writeBenchmarkResultCalculateMode(row->CUDNN_CONVOLUTION_BWD_FILTER_ALGO_FFT_TILING);
-
-            writeBenchmarkResultCalculateMode(row->CUDNN_CONVOLUTION_BWD_DATA_ALGO_0);
-            writeBenchmarkResultCalculateMode(row->CUDNN_CONVOLUTION_BWD_DATA_ALGO_1);
-            writeBenchmarkResultCalculateMode(row->CUDNN_CONVOLUTION_BWD_DATA_ALGO_FFT);
-            writeBenchmarkResultCalculateMode(row->CUDNN_CONVOLUTION_BWD_DATA_ALGO_FFT_TILING);
-            writeBenchmarkResultCalculateMode(row->CUDNN_CONVOLUTION_BWD_DATA_ALGO_WINOGRAD);
-            writeBenchmarkResultCalculateMode(row->CUDNN_CONVOLUTION_BWD_DATA_ALGO_WINOGRAD_NONFUSED);
 
             outfile_stream_ << std::endl;
         }
