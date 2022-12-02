@@ -20,10 +20,9 @@ void Benchmark<T, O>::create_curand_generator() {
 }
 
 template<typename T, typename O>
-Benchmark<T, O>::Benchmark(benchmarkOperationMode operation_mode) {
+Benchmark<T, O>::Benchmark() {
     create_cudnn();
     create_curand_generator();
-    this->operation_mode = operation_mode;
 }
 
 template<typename T, typename O>
@@ -236,39 +235,6 @@ benchmarkResult Benchmark<T, O>::backward_data(cudnnConvolutionBwdDataAlgo_t alg
 }
 
 template<typename T, typename O>
-benchmarkResult Benchmark<T, O>::forward_workspace(cudnnConvolutionFwdAlgo_t algo) {
-    size_t workspace_size;
-    try {
-        workspace_size = fwd_workspace_size(algo);
-        return {0, workspace_size, BENCHMARK_SUCCESS};
-    } catch (std::exception &exception) {
-        return {0, 0, BENCHMARK_NOT_SUPPORTED};
-    }
-}
-
-template<typename T, typename O>
-benchmarkResult Benchmark<T, O>::backward_filter_workspace(cudnnConvolutionBwdFilterAlgo_t algo) {
-    size_t workspace_size;
-    try {
-        workspace_size = bwd_filter_workspace_size(algo);
-        return {0, workspace_size, BENCHMARK_SUCCESS};
-    } catch (std::exception &exception) {
-        return {0, 0, BENCHMARK_NOT_SUPPORTED};
-    }
-}
-
-template<typename T, typename O>
-benchmarkResult Benchmark<T, O>::backward_data_workspace(cudnnConvolutionBwdDataAlgo_t algo) {
-    size_t workspace_size;
-    try {
-        workspace_size = bwd_data_workspace_size(algo);
-        return {0, workspace_size, BENCHMARK_SUCCESS};
-    } catch (std::exception &exception) {
-        return {0, 0, BENCHMARK_NOT_SUPPORTED};
-    }
-}
-
-template<typename T, typename O>
 void Benchmark<T, O>::forward_algorythms(uint32_t num_repeats) {
     benchmark_row->CUDNN_CONVOLUTION_FWD_ALGO_GEMM = forward(CUDNN_CONVOLUTION_FWD_ALGO_GEMM, num_repeats);
     benchmark_row->CUDNN_CONVOLUTION_FWD_ALGO_IMPLICIT_GEMM = forward(CUDNN_CONVOLUTION_FWD_ALGO_IMPLICIT_GEMM,
@@ -312,45 +278,6 @@ void Benchmark<T, O>::backward_data_algorythms(uint32_t num_repeats) {
 }
 
 template<typename T, typename O>
-void Benchmark<T, O>::forward_algorythms_workspace() {
-    benchmark_row->CUDNN_CONVOLUTION_FWD_ALGO_GEMM = forward_workspace(CUDNN_CONVOLUTION_FWD_ALGO_GEMM);
-    benchmark_row->CUDNN_CONVOLUTION_FWD_ALGO_IMPLICIT_GEMM = forward_workspace(
-            CUDNN_CONVOLUTION_FWD_ALGO_IMPLICIT_GEMM);
-    benchmark_row->CUDNN_CONVOLUTION_FWD_ALGO_IMPLICIT_PRECOMP_GEMM = forward_workspace(
-            CUDNN_CONVOLUTION_FWD_ALGO_IMPLICIT_PRECOMP_GEMM);
-    benchmark_row->CUDNN_CONVOLUTION_FWD_ALGO_DIRECT = forward_workspace(CUDNN_CONVOLUTION_FWD_ALGO_DIRECT);
-    benchmark_row->CUDNN_CONVOLUTION_FWD_ALGO_FFT = forward_workspace(CUDNN_CONVOLUTION_FWD_ALGO_FFT);
-    benchmark_row->CUDNN_CONVOLUTION_FWD_ALGO_FFT_TILING = forward_workspace(CUDNN_CONVOLUTION_FWD_ALGO_FFT_TILING);
-    benchmark_row->CUDNN_CONVOLUTION_FWD_ALGO_WINOGRAD = forward_workspace(CUDNN_CONVOLUTION_FWD_ALGO_WINOGRAD);
-    benchmark_row->CUDNN_CONVOLUTION_FWD_ALGO_WINOGRAD_NONFUSED = forward_workspace(
-            CUDNN_CONVOLUTION_FWD_ALGO_WINOGRAD_NONFUSED);
-}
-
-template<typename T, typename O>
-void Benchmark<T, O>::backward_filter_algorythms_workspace() {
-    benchmark_row->CUDNN_CONVOLUTION_BWD_FILTER_ALGO_0 = backward_filter_workspace(CUDNN_CONVOLUTION_BWD_FILTER_ALGO_0);
-    benchmark_row->CUDNN_CONVOLUTION_BWD_FILTER_ALGO_1 = backward_filter_workspace(CUDNN_CONVOLUTION_BWD_FILTER_ALGO_1);
-    benchmark_row->CUDNN_CONVOLUTION_BWD_FILTER_ALGO_3 = backward_filter_workspace(CUDNN_CONVOLUTION_BWD_FILTER_ALGO_3);
-    benchmark_row->CUDNN_CONVOLUTION_BWD_FILTER_ALGO_FFT = backward_filter_workspace(
-            CUDNN_CONVOLUTION_BWD_FILTER_ALGO_FFT);
-    benchmark_row->CUDNN_CONVOLUTION_BWD_FILTER_ALGO_FFT_TILING = backward_filter_workspace(
-            CUDNN_CONVOLUTION_BWD_FILTER_ALGO_FFT_TILING);
-}
-
-template<typename T, typename O>
-void Benchmark<T, O>::backward_data_algorythms_workspace() {
-    benchmark_row->CUDNN_CONVOLUTION_BWD_DATA_ALGO_0 = backward_data_workspace(CUDNN_CONVOLUTION_BWD_DATA_ALGO_0);
-    benchmark_row->CUDNN_CONVOLUTION_BWD_DATA_ALGO_1 = backward_data_workspace(CUDNN_CONVOLUTION_BWD_DATA_ALGO_1);
-    benchmark_row->CUDNN_CONVOLUTION_BWD_DATA_ALGO_FFT = backward_data_workspace(CUDNN_CONVOLUTION_BWD_DATA_ALGO_FFT);
-    benchmark_row->CUDNN_CONVOLUTION_BWD_DATA_ALGO_FFT_TILING = backward_data_workspace(
-            CUDNN_CONVOLUTION_BWD_DATA_ALGO_FFT_TILING);
-    benchmark_row->CUDNN_CONVOLUTION_BWD_DATA_ALGO_WINOGRAD = backward_data_workspace(
-            CUDNN_CONVOLUTION_BWD_DATA_ALGO_WINOGRAD);
-    benchmark_row->CUDNN_CONVOLUTION_BWD_DATA_ALGO_WINOGRAD_NONFUSED = backward_data_workspace(
-            CUDNN_CONVOLUTION_BWD_DATA_ALGO_WINOGRAD_NONFUSED);
-}
-
-template<typename T, typename O>
 void Benchmark<T, O>::calculate_workspace_benchmark(uint32_t num_repeats) {
     assert(inputTensorDescriptor);
     assert(outputTensorDescriptor);
@@ -385,13 +312,6 @@ void Benchmark<T, O>::calculate_workspace_benchmark(uint32_t num_repeats) {
     delete delta;
     delete dW;
     delete dX;
-}
-
-template<typename T, typename O>
-void Benchmark<T, O>::workspace_benchmark() {
-    forward_algorythms_workspace();
-    backward_filter_algorythms_workspace();
-    backward_data_algorythms_workspace();
 }
 
 template<typename T, typename O>
@@ -499,14 +419,7 @@ void Benchmark<T, O>::benchmark(benchmarkRow &benchmarkInput, uint32_t num_repea
 
     cudnnSetConvolutionMathType(convolutionDescriptor_, CUDNN_TENSOR_OP_MATH);
 
-    switch (operation_mode) {
-        case CALCULATION_AND_WORKSPACE_SIZE_MODE:
-            calculate_workspace_benchmark(num_repeats);
-            break;
-        case ONLY_WORKSPACE_SIZE_MODE:
-            workspace_benchmark();
-            break;
-    }
+    calculate_workspace_benchmark(num_repeats);
 
     delete inputTensorDescriptor;
     delete outputTensorDescriptor;
@@ -518,13 +431,13 @@ void Benchmark<T, O>::benchmark(benchmarkRow &benchmarkInput, uint32_t num_repea
 template<typename T, typename O>
 void
 Benchmark<T, O>::run(std::string file_name, std::string output_file_name, bool all_formats,
-                  benchmarkOperationMode operation_mode, uint32_t num_repeats,
+                  uint32_t num_repeats,
                   cudnnTensorFormat_t input_format, cudnnTensorFormat_t output_format,
                   cudnnTensorFormat_t kernel_format) {
 
     auto benchmark_rows = parser::readInputDataFile(file_name);
 
-    Benchmark<T, O> benchmark(operation_mode);
+    Benchmark<T, O> benchmark;
     parser::Parser<T, O> parser(&benchmark, output_file_name);
     for (auto row : benchmark_rows) {
         if (!all_formats) {
@@ -577,13 +490,12 @@ Benchmark<T, O>::run(std::string file_name, std::string output_file_name, bool a
 }
 
 int main(int argc, char **argv) {
-    if (argc < 6) {
+    if (argc < 5) {
         std::cerr << "ERROR ARGS PROGRAM: \n"
                      "file_name - name of input file with convolution cases\n"
                      "file_name_output - name of output file with benchmark result\n"
                      "data_type - type of data values (like fp16 and etc)\n"
                      "all_format - use all cudnn data format (true/false)\n"
-                     "operation_mode - benchmark operation mode\n"
                      "num_repeats - number of repeats per one algorithm\n"
                      "input_tensor_data_format - format of input tensor\n"
                      "output_tensor_data_format - format of output tensor\n"
@@ -596,10 +508,9 @@ int main(int argc, char **argv) {
     std::string output_file_name = argv[2];
     std::string data_type_name = argv[3];
     bool all_formats = static_cast<bool>(std::stoi(argv[4]));
-    benchmarkOperationMode operation_mode = static_cast<benchmarkOperationMode>(std::stoi(argv[5]));
-    uint32_t num_repeats = static_cast<uint32_t>(std::stoi(argv[6]));
+    uint32_t num_repeats = static_cast<uint32_t>(std::stoi(argv[5]));
 
-    if (!all_formats && (argc < 10)) {
+    if (!all_formats && (argc < 9)) {
         std::cerr << "input_tensor_data_format - format of input tensor\n"
                      "output_tensor_data_format - format of output tensor\n"
                      "kernel_tensor_data_format - format of kernel tensor\n" << std::endl;
@@ -610,45 +521,45 @@ int main(int argc, char **argv) {
     cudnnTensorFormat_t output_format;
     cudnnTensorFormat_t kernel_format;
     if (!all_formats) {
-        input_format = get_data_format_by_name(argv[7]);
-        output_format = get_data_format_by_name(argv[8]);
-        kernel_format = get_data_format_by_name(argv[9]);
+        input_format = get_data_format_by_name(argv[6]);
+        output_format = get_data_format_by_name(argv[7]);
+        kernel_format = get_data_format_by_name(argv[8]);
     }
 
     if (data_type_name.compare("fp16") == 0)
-        Benchmark<DATA_HALF_FLOAT, DATA_HALF_FLOAT>::run(file_name, output_file_name, all_formats, operation_mode, num_repeats,
+        Benchmark<DATA_HALF_FLOAT, DATA_HALF_FLOAT>::run(file_name, output_file_name, all_formats, num_repeats,
                                         input_format, output_format,
                                         kernel_format);
     else if (data_type_name.compare("fp32") == 0)
-        Benchmark<DATA_FLOAT>::run(file_name, output_file_name, all_formats, operation_mode, num_repeats, input_format,
+        Benchmark<DATA_FLOAT>::run(file_name, output_file_name, all_formats, num_repeats, input_format,
                                    output_format,
                                    kernel_format);
     else if (data_type_name.compare("fp64") == 0)
-        Benchmark<DATA_DOUBLE>::run(file_name, output_file_name, all_formats, operation_mode, num_repeats, input_format,
+        Benchmark<DATA_DOUBLE>::run(file_name, output_file_name, all_formats, num_repeats, input_format,
                                     output_format,
                                     kernel_format);
     else if (data_type_name.compare("int8") == 0)
-        Benchmark<DATA_INT8, DATA_INT32>::run(file_name, output_file_name, all_formats, operation_mode, num_repeats, input_format,
+        Benchmark<DATA_INT8, DATA_INT32>::run(file_name, output_file_name, all_formats, num_repeats, input_format,
                                   output_format,
                                   kernel_format);
     else if (data_type_name.compare("uint8") == 0)
-        Benchmark<DATA_UINT8>::run(file_name, output_file_name, all_formats, operation_mode, num_repeats, input_format,
+        Benchmark<DATA_UINT8>::run(file_name, output_file_name, all_formats, num_repeats, input_format,
                                    output_format,
                                    kernel_format);
     else if (data_type_name.compare("int32") == 0)
-        Benchmark<DATA_INT32>::run(file_name, output_file_name, all_formats, operation_mode, num_repeats, input_format,
+        Benchmark<DATA_INT32>::run(file_name, output_file_name, all_formats, num_repeats, input_format,
                                    output_format,
                                    kernel_format);
     else if (data_type_name.compare("int8x4") == 0)
-        Benchmark<DATA_INT8x4>::run(file_name, output_file_name, all_formats, operation_mode, num_repeats, input_format,
+        Benchmark<DATA_INT8x4>::run(file_name, output_file_name, all_formats, num_repeats, input_format,
                                     output_format,
                                     kernel_format);
     else if (data_type_name.compare("int8x32") == 0)
-        Benchmark<DATA_INT8x32>::run(file_name, output_file_name, all_formats, operation_mode, num_repeats,
+        Benchmark<DATA_INT8x32>::run(file_name, output_file_name, all_formats, num_repeats,
                                      input_format, output_format,
                                      kernel_format);
     else if (data_type_name.compare("uint8x4") == 0)
-        Benchmark<DATA_UINT8x4>::run(file_name, output_file_name, all_formats, operation_mode, num_repeats,
+        Benchmark<DATA_UINT8x4>::run(file_name, output_file_name, all_formats, num_repeats,
                                      input_format, output_format,
                                      kernel_format);
     else std::cerr << "Data type not supported" << std::endl;

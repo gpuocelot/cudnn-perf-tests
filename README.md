@@ -55,7 +55,6 @@ The benchmark expects the following arguments, in the order listed:
 * `output_file_name`: path to the output file with benchmark results;
 * `data_type`: data type used (accepted values are `fp16`, `fp32`, `fp64`, `int8`, `uint8`, `int32`, `int8x4`, `uint8x4`, `uint8x32`);
 * `all_formats`: `1` if all input/output/tensor formats should be tested, `0` to run with specific data formats only;
-* `operation_mode`: one of the operation modes (see below);
 * `num_repeats`: number of repetitions for each convolution algorithm.
 
 If `all_formats` is set to `0`, the following additional arguments must be specified:
@@ -63,19 +62,15 @@ If `all_formats` is set to `0`, the following additional arguments must be speci
 * `output_tensor_format`: output tensor data format (accepted values are `NCHW`, `NHWC`, `NCHW_VECT_C`);
 * `kernel_tensor_format`: kernel tensor data format (accepted values are `NCHW`, `NHWC`, `NCHW_VECT_C`).
 
-### Operation modes
-* `0`: measure workspace memory size only;
-* `1`: measure execution time and workspace size.
-
 ### Examples
 
 Example with specific data formats:
 ```shell
-$ ./bin/benchmark conv_example.txt out_example.txt fp32 0 0 100 NHWC NHWC NHWC
+$ ./bin/benchmark conv_example.txt out_example.txt fp32 0 100 NHWC NHWC NHWC
 ```
 Example with all data formats:
 ```shell
-$ ./bin/benchmark conv_example.txt out_example.txt fp32 1 0 1000
+$ ./bin/benchmark conv_example.txt out_example.txt fp32 1 1000
 ```
 Obtaining results
 -----------------
