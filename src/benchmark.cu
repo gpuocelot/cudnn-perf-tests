@@ -172,16 +172,8 @@ void Benchmark<T, O>::benchmark(benchmarkRow &benchmarkInput, uint32_t num_repea
         computeDataType = CUDNN_DATA_HALF;
     } else if (std::is_same<O, DATA_INT32>::value) {
         computeDataType = CUDNN_DATA_INT32;
-    } else if (std::is_same<O, DATA_INT8>::value) {
-        computeDataType = CUDNN_DATA_INT8;
     } else if (std::is_same<O, DATA_UINT8>::value) {
         computeDataType = CUDNN_DATA_UINT8;
-    } else if (std::is_same<O, DATA_INT8x4>::value) {
-        computeDataType = CUDNN_DATA_INT8x4;
-    } else if (std::is_same<O, DATA_INT8x32>::value) {
-        computeDataType = CUDNN_DATA_INT8x32;
-    } else if (std::is_same<O, DATA_UINT8x4>::value) {
-        computeDataType = CUDNN_DATA_UINT8x4;
     } else {
         throw new std::runtime_error("Cannot find supported format");
     }
@@ -236,6 +228,11 @@ void Benchmark<T, O>::benchmark(benchmarkRow &benchmarkInput, uint32_t num_repea
             &c,
             &h,
             &w));
+
+    if (n != formatOutputTensor.N || c != formatOutputTensor.C ||
+        h != formatOutputTensor.H || w != formatOutputTensor.W) {
+            throw std::runtime_error("Wrong output shape.");
+    }
 
     std::cerr << "OUT VALUES: " << h <<" " << w << " " << c << " " << n << std::endl;
 
@@ -349,7 +346,7 @@ int main(int argc, char **argv) {
     }
 
     if (data_type_name.compare("fp16") == 0)
-        Benchmark<DATA_HALF_FLOAT, DATA_HALF_FLOAT>::run(file_name, output_file_name, all_formats, num_repeats,
+        Benchmark<DATA_HALF_FLOAT>::run(file_name, output_file_name, all_formats, num_repeats,
                                         input_format, output_format,
                                         kernel_format);
     else if (data_type_name.compare("fp32") == 0)
@@ -373,11 +370,11 @@ int main(int argc, char **argv) {
                                    output_format,
                                    kernel_format);
     else if (data_type_name.compare("int8x4") == 0)
-        Benchmark<DATA_INT8x4>::run(file_name, output_file_name, all_formats, num_repeats, input_format,
+        Benchmark<DATA_INT8x4, DATA_INT32>::run(file_name, output_file_name, all_formats, num_repeats, input_format,
                                     output_format,
                                     kernel_format);
     else if (data_type_name.compare("int8x32") == 0)
-        Benchmark<DATA_INT8x32>::run(file_name, output_file_name, all_formats, num_repeats,
+        Benchmark<DATA_INT8x32, DATA_INT32>::run(file_name, output_file_name, all_formats, num_repeats,
                                      input_format, output_format,
                                      kernel_format);
     else if (data_type_name.compare("uint8x4") == 0)
