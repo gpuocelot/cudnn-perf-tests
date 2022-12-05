@@ -8,25 +8,25 @@
 #include "benchmark.hpp"
 #include "parser.hpp"
 
-template<typename T, typename O>
-void Benchmark<T, O>::create_cudnn() {
+template<typename T>
+void Benchmark<T>::create_cudnn() {
     CHECK_CUDNN_ERROR(cudnnCreate(&cudnn));
 }
 
-template<typename T, typename O>
-void Benchmark<T, O>::create_curand_generator() {
+template<typename T>
+void Benchmark<T>::create_curand_generator() {
     curandCreateGenerator(&curand_gen, CURAND_RNG_PSEUDO_DEFAULT);
     curandSetPseudoRandomGeneratorSeed(curand_gen, 123ULL);
 }
 
-template<typename T, typename O>
-Benchmark<T, O>::Benchmark() {
+template<typename T>
+Benchmark<T>::Benchmark() {
     create_cudnn();
     create_curand_generator();
 }
 
-template<typename T, typename O>
-size_t Benchmark<T, O>::fwd_workspace_size(cudnnConvolutionFwdAlgo_t algo) {
+template<typename T>
+size_t Benchmark<T>::fwd_workspace_size(cudnnConvolutionFwdAlgo_t algo) {
     assert(cudnn);
     assert(inputTensorDescriptor);
     assert(filterDescriptor);
@@ -43,8 +43,8 @@ size_t Benchmark<T, O>::fwd_workspace_size(cudnnConvolutionFwdAlgo_t algo) {
     return workspace_size;
 }
 
-template<typename T, typename O>
-benchmarkResult Benchmark<T, O>::forward(cudnnConvolutionFwdAlgo_t algo, uint32_t num_repeats) {
+template<typename T>
+benchmarkResult Benchmark<T>::forward(cudnnConvolutionFwdAlgo_t algo, uint32_t num_repeats) {
     assert(inputTensor);
     assert(outputTensor);
     assert(kernelTensor);
@@ -95,8 +95,8 @@ benchmarkResult Benchmark<T, O>::forward(cudnnConvolutionFwdAlgo_t algo, uint32_
     return {fwd_time, workspace_size, BENCHMARK_SUCCESS};
 }
 
-template<typename T, typename O>
-void Benchmark<T, O>::forward_algorythms(uint32_t num_repeats) {
+template<typename T>
+void Benchmark<T>::forward_algorythms(uint32_t num_repeats) {
     benchmark_row->CUDNN_CONVOLUTION_FWD_ALGO_GEMM = forward(CUDNN_CONVOLUTION_FWD_ALGO_GEMM, num_repeats);
     benchmark_row->CUDNN_CONVOLUTION_FWD_ALGO_IMPLICIT_GEMM = forward(CUDNN_CONVOLUTION_FWD_ALGO_IMPLICIT_GEMM,
                                                                       num_repeats);
@@ -110,8 +110,8 @@ void Benchmark<T, O>::forward_algorythms(uint32_t num_repeats) {
                                                                           num_repeats);
 }
 
-template<typename T, typename O>
-void Benchmark<T, O>::calculate_workspace_benchmark(uint32_t num_repeats) {
+template<typename T>
+void Benchmark<T>::calculate_workspace_benchmark(uint32_t num_repeats) {
     assert(inputTensorDescriptor);
     assert(outputTensorDescriptor);
     assert(filterDescriptor);
@@ -122,7 +122,7 @@ void Benchmark<T, O>::calculate_workspace_benchmark(uint32_t num_repeats) {
 
     inputTensor = new Tensor<T>(
             {formatInputTensor.N, formatInputTensor.H, formatInputTensor.W, formatInputTensor.C});
-    outputTensor = new Tensor<O>(
+    outputTensor = new Tensor<T>(
             {formatOutputTensor.N, formatOutputTensor.H, formatOutputTensor.W, formatOutputTensor.C});
     kernelTensor = new Tensor<T>({formatFilter.N, formatFilter.H, formatFilter.W, formatFilter.C});
 
@@ -136,44 +136,39 @@ void Benchmark<T, O>::calculate_workspace_benchmark(uint32_t num_repeats) {
     delete kernelTensor;
 }
 
-template<typename T, typename O>
-void Benchmark<T, O>::benchmark(benchmarkRow &benchmarkInput, uint32_t num_repeats) {
+template<typename T>
+void Benchmark<T>::benchmark(benchmarkRow &benchmarkInput, uint32_t num_repeats) {
     this->benchmark_row = &benchmarkInput;
 
     cudnnDataType_t dataType;
+    cudnnDataType_t computeDataType;
     if (std::is_same<T, DATA_FLOAT>::value) {
         dataType = CUDNN_DATA_FLOAT;
+        computeDataType = CUDNN_DATA_FLOAT;
     } else if (std::is_same<T, DATA_DOUBLE>::value) {
         dataType = CUDNN_DATA_DOUBLE;
+        computeDataType = CUDNN_DATA_DOUBLE;
     } else if (std::is_same<T, DATA_HALF_FLOAT>::value) {
         dataType = CUDNN_DATA_HALF;
+        computeDataType = CUDNN_DATA_HALF;
     } else if (std::is_same<T, DATA_INT32>::value) {
         dataType = CUDNN_DATA_INT32;
+        computeDataType = CUDNN_DATA_INT32;
     } else if (std::is_same<T, DATA_INT8>::value) {
         dataType = CUDNN_DATA_INT8;
+        computeDataType = CUDNN_DATA_INT32;
     } else if (std::is_same<T, DATA_UINT8>::value) {
         dataType = CUDNN_DATA_UINT8;
+        computeDataType = CUDNN_DATA_INT32;
     } else if (std::is_same<T, DATA_INT8x4>::value) {
         dataType = CUDNN_DATA_INT8x4;
+        computeDataType = CUDNN_DATA_INT32;
     } else if (std::is_same<T, DATA_INT8x32>::value) {
         dataType = CUDNN_DATA_INT8x32;
+        computeDataType = CUDNN_DATA_INT32;
     } else if (std::is_same<T, DATA_UINT8x4>::value) {
         dataType = CUDNN_DATA_UINT8x4;
-    } else {
-        throw new std::runtime_error("Cannot find supported format");
-    }
-
-    cudnnDataType_t computeDataType;
-    if (std::is_same<O, DATA_FLOAT>::value) {
-        computeDataType = CUDNN_DATA_FLOAT;
-    } else if (std::is_same<O, DATA_DOUBLE>::value) {
-        computeDataType = CUDNN_DATA_DOUBLE;
-    } else if (std::is_same<O, DATA_HALF_FLOAT>::value) {
-        computeDataType = CUDNN_DATA_HALF;
-    } else if (std::is_same<O, DATA_INT32>::value) {
         computeDataType = CUDNN_DATA_INT32;
-    } else if (std::is_same<O, DATA_UINT8>::value) {
-        computeDataType = CUDNN_DATA_UINT8;
     } else {
         throw new std::runtime_error("Cannot find supported format");
     }
@@ -208,7 +203,6 @@ void Benchmark<T, O>::benchmark(benchmarkRow &benchmarkInput, uint32_t num_repea
 
 
     CHECK_CUDNN_ERROR(cudnnCreateConvolutionDescriptor(&convolutionDescriptor_));
-
     CHECK_CUDNN_ERROR(cudnnSetConvolution2dDescriptor(convolutionDescriptor_,
                                                       benchmarkInput.pad_h,
                                                       benchmarkInput.pad_w,
@@ -247,17 +241,17 @@ void Benchmark<T, O>::benchmark(benchmarkRow &benchmarkInput, uint32_t num_repea
     CHECK_CUDNN_ERROR(cudnnDestroyConvolutionDescriptor(convolutionDescriptor_));
 }
 
-template<typename T, typename O>
+template<typename T>
 void
-Benchmark<T, O>::run(std::string file_name, std::string output_file_name, bool all_formats,
+Benchmark<T>::run(std::string file_name, std::string output_file_name, bool all_formats,
                   uint32_t num_repeats,
                   cudnnTensorFormat_t input_format, cudnnTensorFormat_t output_format,
                   cudnnTensorFormat_t kernel_format) {
 
     auto benchmark_rows = parser::readInputDataFile(file_name);
 
-    Benchmark<T, O> benchmark;
-    parser::Parser<T, O> parser(&benchmark, output_file_name);
+    Benchmark<T> benchmark;
+    parser::Parser<T> parser(&benchmark, output_file_name);
     for (auto row : benchmark_rows) {
         if (!all_formats) {
             row.inputTensorFormat = input_format;
@@ -358,7 +352,7 @@ int main(int argc, char **argv) {
                                     output_format,
                                     kernel_format);
     else if (data_type_name.compare("int8") == 0)
-        Benchmark<DATA_INT8, DATA_INT32>::run(file_name, output_file_name, all_formats, num_repeats, input_format,
+        Benchmark<DATA_INT8>::run(file_name, output_file_name, all_formats, num_repeats, input_format,
                                   output_format,
                                   kernel_format);
     else if (data_type_name.compare("uint8") == 0)
@@ -370,11 +364,11 @@ int main(int argc, char **argv) {
                                    output_format,
                                    kernel_format);
     else if (data_type_name.compare("int8x4") == 0)
-        Benchmark<DATA_INT8x4, DATA_INT32>::run(file_name, output_file_name, all_formats, num_repeats, input_format,
+        Benchmark<DATA_INT8x4>::run(file_name, output_file_name, all_formats, num_repeats, input_format,
                                     output_format,
                                     kernel_format);
     else if (data_type_name.compare("int8x32") == 0)
-        Benchmark<DATA_INT8x32, DATA_INT32>::run(file_name, output_file_name, all_formats, num_repeats,
+        Benchmark<DATA_INT8x32>::run(file_name, output_file_name, all_formats, num_repeats,
                                      input_format, output_format,
                                      kernel_format);
     else if (data_type_name.compare("uint8x4") == 0)
