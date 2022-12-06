@@ -97,17 +97,17 @@ benchmarkResult Benchmark<T>::forward(cudnnConvolutionFwdAlgo_t algo, uint32_t n
 
 template<typename T>
 void Benchmark<T>::forward_algorythms(uint32_t num_repeats) {
-    benchmark_row->CUDNN_CONVOLUTION_FWD_ALGO_GEMM = forward(CUDNN_CONVOLUTION_FWD_ALGO_GEMM, num_repeats);
-    benchmark_row->CUDNN_CONVOLUTION_FWD_ALGO_IMPLICIT_GEMM = forward(CUDNN_CONVOLUTION_FWD_ALGO_IMPLICIT_GEMM,
-                                                                      num_repeats);
+    // benchmark_row->CUDNN_CONVOLUTION_FWD_ALGO_GEMM = forward(CUDNN_CONVOLUTION_FWD_ALGO_GEMM, num_repeats);
+    // benchmark_row->CUDNN_CONVOLUTION_FWD_ALGO_IMPLICIT_GEMM = forward(CUDNN_CONVOLUTION_FWD_ALGO_IMPLICIT_GEMM,
+    //                                                                   num_repeats);
     benchmark_row->CUDNN_CONVOLUTION_FWD_ALGO_IMPLICIT_PRECOMP_GEMM = forward(
             CUDNN_CONVOLUTION_FWD_ALGO_IMPLICIT_PRECOMP_GEMM, num_repeats);
-    benchmark_row->CUDNN_CONVOLUTION_FWD_ALGO_DIRECT = forward(CUDNN_CONVOLUTION_FWD_ALGO_DIRECT, num_repeats);
-    benchmark_row->CUDNN_CONVOLUTION_FWD_ALGO_FFT = forward(CUDNN_CONVOLUTION_FWD_ALGO_FFT, num_repeats);
-    benchmark_row->CUDNN_CONVOLUTION_FWD_ALGO_FFT_TILING = forward(CUDNN_CONVOLUTION_FWD_ALGO_FFT_TILING, num_repeats);
-    benchmark_row->CUDNN_CONVOLUTION_FWD_ALGO_WINOGRAD = forward(CUDNN_CONVOLUTION_FWD_ALGO_WINOGRAD, num_repeats);
-    benchmark_row->CUDNN_CONVOLUTION_FWD_ALGO_WINOGRAD_NONFUSED = forward(CUDNN_CONVOLUTION_FWD_ALGO_WINOGRAD_NONFUSED,
-                                                                          num_repeats);
+    // benchmark_row->CUDNN_CONVOLUTION_FWD_ALGO_DIRECT = forward(CUDNN_CONVOLUTION_FWD_ALGO_DIRECT, num_repeats);
+    // benchmark_row->CUDNN_CONVOLUTION_FWD_ALGO_FFT = forward(CUDNN_CONVOLUTION_FWD_ALGO_FFT, num_repeats);
+    // benchmark_row->CUDNN_CONVOLUTION_FWD_ALGO_FFT_TILING = forward(CUDNN_CONVOLUTION_FWD_ALGO_FFT_TILING, num_repeats);
+    // benchmark_row->CUDNN_CONVOLUTION_FWD_ALGO_WINOGRAD = forward(CUDNN_CONVOLUTION_FWD_ALGO_WINOGRAD, num_repeats);
+    // benchmark_row->CUDNN_CONVOLUTION_FWD_ALGO_WINOGRAD_NONFUSED = forward(CUDNN_CONVOLUTION_FWD_ALGO_WINOGRAD_NONFUSED,
+    //                                                                       num_repeats);
 }
 
 template<typename T>
@@ -124,15 +124,25 @@ void Benchmark<T>::calculate_workspace_benchmark(uint32_t num_repeats) {
             {formatInputTensor.N, formatInputTensor.H, formatInputTensor.W, formatInputTensor.C});
     outputTensor = new Tensor<T>(
             {formatOutputTensor.N, formatOutputTensor.H, formatOutputTensor.W, formatOutputTensor.C});
+    auto origKernelTensor = new Tensor<T>({formatFilter.N, formatFilter.H, formatFilter.W, formatFilter.C});
     kernelTensor = new Tensor<T>({formatFilter.N, formatFilter.H, formatFilter.W, formatFilter.C});
 
     inputTensor->rand(curand_gen);
-    kernelTensor->rand(curand_gen);
+    origKernelTensor->rand(curand_gen);
+    if (filterDescriptor->dataType() == CUDNN_DATA_INT8x32) {
+        CHECK_CUDNN_ERROR(cudnnReorderFilterAndBias(
+            cudnn, filterDescriptor->descriptor(), CUDNN_DEFAULT_REORDER, origKernelTensor->begin(), kernelTensor->begin(), false, NULL, NULL));
+
+        CHECK_CUDNN_ERROR(cudnnSetConvolutionReorderType(convolutionDescriptor_, CUDNN_NO_REORDER));
+    } else {
+        cudaMemcpy(kernelTensor->begin(), origKernelTensor->begin(), sizeof(origKernelTensor->begin()[0]) * origKernelTensor->size(), cudaMemcpyDeviceToDevice);
+    }
 
     forward_algorythms(num_repeats);
 
     delete inputTensor;
     delete outputTensor;
+    delete origKernelTensor;
     delete kernelTensor;
 }
 
