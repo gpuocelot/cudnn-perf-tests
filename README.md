@@ -1,55 +1,32 @@
-CuDNN Convolution Benchmark
-===============
+# CuDNN Convolution Benchmark
 
-Prerequisites
--------------
+## Prerequisites
+
 * [CUDA Toolkit](https://docs.nvidia.com/cuda/index.html)
-* [cuDNN SDK](https://developer.nvidia.com/cudnn)
 
-Building
---------
-Export the path to the CUDA Tookit directory:
-```shell
-$ export CUDA_PATH=/path_to_cuda
-```
-Export the path to the cuDNN SDK directory:
-```shell
-$ export CUDNN_PATH=/path_to_cudnn
-```
-Check `nvcc`'s version and cuDNN library paths to ensure your setup is correct:
-```shell
-$ $CUDA_PATH/bin/nvcc --version
+## Building
 
-nvcc: NVIDIA (R) Cuda compiler driver
-Copyright (c) 2005-2019 NVIDIA Corporation
-Built on Fri_Feb__8_19:08:17_PST_2019
-Cuda compilation tools, release 10.1, V10.1.105
 ```
-```shell
-$ ls $CUDNN_PATH/include $CUDNN_PATH/lib64
-
-/usr/local/cuda/cuda/include:
-cudnn.h
-
-/usr/local/cuda/cuda/lib64:
-libcudnn.so  libcudnn.so.7  libcudnn.so.7.5.0  libcudnn_static.a
-```
-Build the benchmark:
-```shell
-$ make
-```
-```shell
-$ mkdir -p bin
-$ $CUDA_PATH/bin/nvcc -std=c++11 -I $CUDNN_PATH/include -L $CUDNN_PATH/lib64 src/benchmark.cu -o bin/benchmark -lcudnn -lcurand
+mkdir build
+cd build
+cmake ..
+make
 ```
 
-Running the benchmark
----------------------
+## Usage
+
+Run all tests at once:
+
+```
+cd build
+ctest
+```
+
+Run individual test, providing the following arguments:
+
 ```shell
 $ ./bin/benchmark file_name data_type all_formats operation_mode num_repeats [input_tensor_format output_tensor_format kernel_tensor_format]
 ```
-
-The benchmark expects the following arguments, in the order listed:
 
 * `file_name`: path to the file with convolution cases ([example](https://github.com/Slimakanzer/cudnn-benchmark/blob/master/conv_example.txt));
 * `output_file_name`: path to the output file with benchmark results;
@@ -62,21 +39,24 @@ If `all_formats` is set to `0`, the following additional arguments must be speci
 * `output_tensor_format`: output tensor data format (accepted values are `NCHW`, `NHWC`, `NCHW_VECT_C`);
 * `kernel_tensor_format`: kernel tensor data format (accepted values are `NCHW`, `NHWC`, `NCHW_VECT_C`).
 
-### Examples
+Examples:
 
-Example with specific data formats:
+* Test specific data formats:
+
 ```shell
 $ ./bin/benchmark conv_example.txt out_example.csv fp32 0 100 NHWC NHWC NHWC
 ```
-Example with all data formats:
+
+* Test all data formats:
 ```shell
 $ ./bin/benchmark conv_example.txt out_example.csv fp32 1 1000
 ```
-Obtaining results
------------------
+
+## Obtaining results
+
 Running the benchmark produces a `output_file_name` file in your working directory.
 
-[Example](https://github.com/Slimakanzer/cudnn-benchmark/blob/master/out_example.csv) contents for `./bin/benchmark conv_example.txt out_example.txt fp32 0 1 10 NCHW NCHW NCHW`:
+[Example](out_example.csv) contents for `./bin/benchmark conv_example.txt out_example.txt fp32 0 1 10 NCHW NCHW NCHW`:
 
 A value `n/a` means that the combination of the input tensor dimension, filter tensor dimension and output tensor dimension is not supported for the specified algorithm on your GPU.
 
@@ -90,3 +70,4 @@ NCHW	NCHW	NCHW	3	3	256	32	324	3	3	1	1	1	1	3	3	1	1	1	1	1474.53	2654208	2193.58	0	
 NCHW	NCHW	NCHW	3	3	256	32	16	3	3	1	1	1	1	3	3	1	1	1	1	348.08	2654208	652.083	0	301.795	60	n/a		2989.4	28459008	9137.38	55730176	421.972	671808	420.687	1843200	423.354	0	139.508	2428	126.237	2356	1967.64	20072448	n/a		965.804	0	123.734	2236	1342.91	19021824	4955.75	55730176	352.066	410624	411.616	1843200	
 .....
 ```
+
