@@ -13,6 +13,8 @@ cmake ..
 make
 ```
 
+Note: The most recent cuDNN distribution will be obtained automatically by installing PyTorch into the build directory.
+
 ## Usage
 
 Run all tests at once:
