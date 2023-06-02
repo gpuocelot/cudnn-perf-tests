@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.19 FATAL_ERROR)
 
 project(cudnn-perf-tests CXX CUDA)
 
-list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
+set(CMAKE_CUDA_RUNTIME_LIBRARY Shared)
 
 find_package(CUDAToolkit REQUIRED)
 find_package(Python3 COMPONENTS Interpreter)
