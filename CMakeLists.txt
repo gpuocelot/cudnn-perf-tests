@@ -5,13 +5,15 @@ project(cudnn-perf-tests CXX CUDA)
 set(CMAKE_CUDA_RUNTIME_LIBRARY Shared)
 
 find_package(CUDAToolkit REQUIRED)
-find_package(Python3 COMPONENTS Interpreter)
+find_package(Python3 COMPONENTS Interpreter REQUIRED)
 execute_process(
 	COMMAND "${Python3_EXECUTABLE}" -m venv "${CMAKE_CURRENT_BINARY_DIR}/venv"
-	COMMAND_ECHO STDOUT)
+	COMMAND_ECHO STDOUT
+	COMMAND_ERROR_IS_FATAL ANY)
 execute_process(
 	COMMAND "${CMAKE_CURRENT_BINARY_DIR}/venv/bin/python" -m pip install torch torchvision torchaudio
-	COMMAND_ECHO STDOUT)
+	COMMAND_ECHO STDOUT
+	COMMAND_ERROR_IS_FATAL ANY)
 
 file(GLOB_RECURSE CUDNN_INCLUDE "cudnn.h")
 get_filename_component(CUDNN_INCLUDE_DIRS ${CUDNN_INCLUDE} DIRECTORY)
